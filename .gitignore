@@ -30,8 +30,13 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# ⚠️ IMPORTANTE: Variables de entorno — NUNCA subir al repo
+.env
+.env.local
 .env*.local
+
+# Ejemplo de entorno (este SÍ se sube, sin valores reales)
+# .env.example  ← este se sube
 
 # typescript
 *.tsbuildinfo
@@ -39,3 +44,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# EAS
+.eas-build-pre-install
+
+# Logs
+*.log

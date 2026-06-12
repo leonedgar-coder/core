@@ -1,12 +1,30 @@
 {
   "name": "bd-colaborativa",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "expo-router/entry",
   "dependencies": {
+    "@react-native-community/netinfo": "^11.4.1",
+    "@react-native-picker/picker": "2.11.0",
+    "@supabase/supabase-js": "^2.49.8",
+    "date-fns": "^4.1.0",
     "expo": "~56.0.11",
+    "expo-constants": "~17.0.8",
+    "expo-file-system": "~18.0.11",
+    "expo-image-picker": "~16.1.4",
+    "expo-linking": "~7.0.5",
+    "expo-print": "~14.0.3",
+    "expo-router": "~56.2.10",
+    "expo-secure-store": "~14.0.1",
+    "expo-sharing": "~13.0.1",
+    "expo-sqlite": "~15.2.10",
     "expo-status-bar": "~56.0.4",
+    "expo-web-browser": "~14.1.6",
     "react": "19.2.3",
-    "react-native": "0.85.3"
+    "react-native": "0.85.3",
+    "react-native-reanimated": "~3.18.0",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1",
+    "zustand": "^5.0.5"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
@@ -16,7 +34,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "lint": "expo lint"
   },
   "private": true
 }

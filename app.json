@@ -1,11 +1,12 @@
 {
   "expo": {
-    "name": "bd-colaborativa",
+    "name": "BD Colaborativa",
     "slug": "bd-colaborativa",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "bdcolaborativa",
     "ios": {
       "supportsTablet": true
     },
@@ -19,7 +20,25 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-sharing",
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "La app necesita acceso a tus fotos para adjuntarlas a los registros.",
+          "cameraPermission": "La app necesita acceso a la cámara para tomar fotos de los registros."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
