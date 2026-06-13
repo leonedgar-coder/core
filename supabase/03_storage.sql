@@ -1,39 +1,29 @@
 -- =============================================================================
--- BD COLABORATIVA — SUPABASE STORAGE
--- Paso 2.3 | Ejecutar DESPUÉS de los pasos anteriores
+-- BD COLABORATIVA — SUPABASE STORAGE (versión idempotente)
+-- Paso 2.3 | Usar DROP POLICY IF EXISTS para re-ejecutar sin errores
 -- =============================================================================
 --
--- PASO 1: Crear buckets en el Dashboard de Supabase
--- ─────────────────────────────────────────────────
--- Ve a: Storage → New bucket
+-- PASO PREVIO (hacer manualmente en el Dashboard):
+-- Storage → New bucket
+--   • fotos-personas  → Public: ✅, Max size: 2MB, MIME: image/jpeg, image/png, image/webp
+--   • fotos-objetos   → misma configuración
 --
--- Bucket 1:
---   Name: fotos-personas
---   Public bucket: ✅ (activado)
---   Allowed MIME types: image/jpeg, image/png, image/webp
---   Max upload size: 2 MB (2097152 bytes)
---
--- Bucket 2:
---   Name: fotos-objetos
---   Misma configuración que fotos-personas
---
--- ─────────────────────────────────────────────────
--- PASO 2: Políticas de Storage (ejecutar este SQL)
--- ─────────────────────────────────────────────────
+-- =============================================================================
 
--- SELECT (leer/descargar): cualquier persona, incluso sin autenticar
--- Las fotos son públicas para mostrarse en la app
+-- fotos-personas: SELECT (público)
+DROP POLICY IF EXISTS "fotos_personas_select" ON storage.objects;
 CREATE POLICY "fotos_personas_select"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'fotos-personas');
 
+-- fotos-objetos: SELECT (público)
+DROP POLICY IF EXISTS "fotos_objetos_select" ON storage.objects;
 CREATE POLICY "fotos_objetos_select"
   ON storage.objects FOR SELECT
   USING (bucket_id = 'fotos-objetos');
 
--- INSERT (subir): solo usuarios autenticados
--- El path DEBE empezar con el user_id del usuario que sube
--- Estructura obligatoria: {user_id}/{nombre_archivo}.jpg
+-- fotos-personas: INSERT (autenticado, path = {user_id}/archivo)
+DROP POLICY IF EXISTS "fotos_personas_insert" ON storage.objects;
 CREATE POLICY "fotos_personas_insert"
   ON storage.objects FOR INSERT
   WITH CHECK (
@@ -42,6 +32,8 @@ CREATE POLICY "fotos_personas_insert"
     AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
+-- fotos-objetos: INSERT
+DROP POLICY IF EXISTS "fotos_objetos_insert" ON storage.objects;
 CREATE POLICY "fotos_objetos_insert"
   ON storage.objects FOR INSERT
   WITH CHECK (
@@ -50,7 +42,8 @@ CREATE POLICY "fotos_objetos_insert"
     AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- UPDATE: el dueño del archivo o un admin
+-- fotos-personas: UPDATE (dueño o admin)
+DROP POLICY IF EXISTS "fotos_personas_update" ON storage.objects;
 CREATE POLICY "fotos_personas_update"
   ON storage.objects FOR UPDATE
   USING (
@@ -61,6 +54,8 @@ CREATE POLICY "fotos_personas_update"
     )
   );
 
+-- fotos-objetos: UPDATE
+DROP POLICY IF EXISTS "fotos_objetos_update" ON storage.objects;
 CREATE POLICY "fotos_objetos_update"
   ON storage.objects FOR UPDATE
   USING (
@@ -71,21 +66,14 @@ CREATE POLICY "fotos_objetos_update"
     )
   );
 
--- DELETE: solo admins
+-- fotos-personas: DELETE (solo admin)
+DROP POLICY IF EXISTS "fotos_personas_delete" ON storage.objects;
 CREATE POLICY "fotos_personas_delete"
   ON storage.objects FOR DELETE
-  USING (
-    bucket_id = 'fotos-personas'
-    AND public.es_admin()
-  );
+  USING (bucket_id = 'fotos-personas' AND public.es_admin());
 
+-- fotos-objetos: DELETE
+DROP POLICY IF EXISTS "fotos_objetos_delete" ON storage.objects;
 CREATE POLICY "fotos_objetos_delete"
   ON storage.objects FOR DELETE
-  USING (
-    bucket_id = 'fotos-objetos'
-    AND public.es_admin()
-  );
-
--- =============================================================================
--- FIN DEL STORAGE
--- =============================================================================
+  USING (bucket_id = 'fotos-objetos' AND public.es_admin());
