@@ -82,6 +82,44 @@ export async function exportarCSV(tabla: TablaDB): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: convierte foto_url o foto_local a data URI base64
+// expo-print no puede cargar URLs remotas — embebemos la imagen directamente
+// ---------------------------------------------------------------------------
+async function fotoADataUri(fila: Record<string, unknown>): Promise<string | null> {
+  try {
+    const fotoLocal = fila.foto_local as string | undefined;
+    const fotoUrl   = fila.foto_url   as string | undefined;
+
+    // 1️⃣ Preferir foto local (ya está en el dispositivo)
+    if (fotoLocal) {
+      const info = await FileSystem.getInfoAsync(fotoLocal);
+      if (info.exists) {
+        const b64 = await FileSystem.readAsStringAsync(fotoLocal, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        return `data:image/jpeg;base64,${b64}`;
+      }
+    }
+
+    // 2️⃣ Descargar desde Supabase Storage al caché y leer como base64
+    if (fotoUrl) {
+      const tmp = `${FileSystem.cacheDirectory}foto_pdf_${Date.now()}.jpg`;
+      const dl = await FileSystem.downloadAsync(fotoUrl, tmp);
+      if (dl.status === 200) {
+        const b64 = await FileSystem.readAsStringAsync(tmp, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        FileSystem.deleteAsync(tmp, { idempotent: true }); // limpieza async
+        return `data:image/jpeg;base64,${b64}`;
+      }
+    }
+  } catch {
+    // Si falla, mostrar celda gris — no bloquear la exportación
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // 11.2 — Exportar PDF
 // ---------------------------------------------------------------------------
 export async function exportarPDF(tabla: TablaDB): Promise<void> {
@@ -105,21 +143,25 @@ export async function exportarPDF(tabla: TablaDB): Promise<void> {
   ];
   const columnasFijas = tabla === 'personas' ? fijasPersonas : fijasObjetos;
 
+  // Pre-cargar todas las fotos como data URI base64 (en paralelo)
+  const filasRaw = filas as unknown as Record<string, unknown>[];
+  const fotosDataUri = await Promise.all(filasRaw.map(fotoADataUri));
+
   // Generar columnas de la tabla HTML
   const thFoto = `<th style="${estiloTH}width:54px">Foto</th>`;
   const thFijas = columnasFijas.map(c => `<th style="${estiloTH}">${c.etiqueta}</th>`).join('');
   const thExtra = columnasExtra.map(c => `<th style="${estiloTH}">${c.etiqueta}</th>`).join('');
 
-  // Generar filas HTML
-  const trFilas = (filas as unknown as Record<string, unknown>[]).map((fila, i) => {
+  // Generar filas HTML (usa filasRaw ya tipado + data URIs pre-cargados)
+  const trFilas = filasRaw.map((fila, i) => {
     const datosExtra = (fila.datos_extra ?? {}) as Record<string, unknown>;
     const bg = i % 2 === 0 ? '#ffffff' : '#f0f4f8';
 
-    // Foto — imagen circular 50x50 o celda gris
-    const fotoUrl = fila.foto_url as string | undefined;
-    const tdFoto = fotoUrl
+    // Foto — data URI base64 embebida o círculo gris si no hay foto
+    const dataUri = fotosDataUri[i];
+    const tdFoto = dataUri
       ? `<td style="${estiloTD}text-align:center">
-           <img src="${fotoUrl}" width="50" height="50"
+           <img src="${dataUri}" width="50" height="50"
                 style="border-radius:50%;object-fit:cover" />
          </td>`
       : `<td style="${estiloTD}text-align:center">
