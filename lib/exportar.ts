@@ -172,12 +172,9 @@ export async function exportarPDF(tabla: TablaDB): Promise<void> {
     height: 792,
   });
 
-  // Mover a documentDirectory con nombre descriptivo
-  const nombre = `${tabla}_${timestamp()}.pdf`;
-  const destino = `${FileSystem.documentDirectory}${nombre}`;
-  await FileSystem.moveAsync({ from: pdfUri, to: destino });
-
-  await Sharing.shareAsync(destino, {
+  // Compartir directamente desde el URI generado por expo-print
+  // (FileSystem.moveAsync falla en Android al cruzar particiones cache → documentDirectory)
+  await Sharing.shareAsync(pdfUri, {
     mimeType: 'application/pdf',
     dialogTitle: `Exportar ${titulo} — PDF`,
     UTI: 'com.adobe.pdf',
