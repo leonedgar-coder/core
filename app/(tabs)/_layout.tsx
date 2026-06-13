@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +9,11 @@ export default function TabsLayout() {
   const { esAdmin } = useAuthStore();
   const insets = useSafeAreaInsets();
 
+  // En Android con translucent=false, el top ya está manejado por el StatusBar.
+  // Para el bottom usamos el inset real; si es 0 (dispositivo sin barra virtual),
+  // agregamos 8dp de padding mínimo.
+  const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 0);
+
   return (
     <Tabs
       screenOptions={{
@@ -17,10 +23,10 @@ export default function TabsLayout() {
           backgroundColor: '#ffffff',
           borderTopColor: '#e2e8f0',
           borderTopWidth: 1,
-          // Altura base + padding inferior del safe area (barra navegación Android)
-          height: 56 + insets.bottom,
-          paddingBottom: insets.bottom + 6,
+          height: 56 + bottomPadding,
+          paddingBottom: bottomPadding + 4,
           paddingTop: 6,
+          elevation: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -28,17 +34,15 @@ export default function TabsLayout() {
         },
         headerStyle: {
           backgroundColor: '#ffffff',
-          shadowColor: '#000',
-          shadowOpacity: 0.06,
           elevation: 2,
+          shadowOpacity: 0.06,
         },
         headerTitleStyle: {
           fontWeight: '700',
           color: '#0f172a',
           fontSize: 17,
         },
-        // Padding superior para la barra de estado
-        headerStatusBarHeight: insets.top,
+        // NO poner headerStatusBarHeight — lo maneja translucent=false
         headerRight: () => <SyncIndicator />,
         headerRightContainerStyle: { paddingRight: 12 },
       }}
@@ -52,7 +56,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="objetos"
         options={{
@@ -62,7 +65,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="admin"
         options={{
