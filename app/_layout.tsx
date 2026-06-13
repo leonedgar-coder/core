@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { View, ActivityIndicator, Platform, StatusBar, StyleSheet } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/store/useAuthStore';
+import { iniciarListenerRed } from '@/lib/sync';
 
 // En Android, desactivar translucent hace que el sistema empuje
 // el contenido hacia abajo de la barra de estado automáticamente.
@@ -15,11 +16,28 @@ if (Platform.OS === 'android') {
 export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
-  const { usuario, sesionCargando, verificarSesion } = useAuthStore();
+  const { usuario, sesionCargando, verificarSesion, esAdmin } = useAuthStore();
+  const listenerCleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     verificarSesion();
   }, []);
+
+  // Iniciar listener de red cuando el usuario tiene sesión activa
+  useEffect(() => {
+    if (usuario) {
+      // Limpiar listener anterior si existe
+      listenerCleanupRef.current?.();
+      listenerCleanupRef.current = iniciarListenerRed(usuario.id, esAdmin);
+    } else {
+      // Al cerrar sesión, detener listener
+      listenerCleanupRef.current?.();
+      listenerCleanupRef.current = null;
+    }
+    return () => {
+      listenerCleanupRef.current?.();
+    };
+  }, [usuario?.id]);
 
   useEffect(() => {
     if (sesionCargando) return;
