@@ -1,17 +1,18 @@
-import { Platform, StatusBar as RNStatusBar } from 'react-native';
+import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/store/useAuthStore';
-import SyncIndicator from '@/components/SyncIndicator';
-
-// Altura fija y segura para la tab bar en Android
-// StatusBar.currentHeight da la altura de la barra de estado (que ya no es translucent)
-// La barra de navegación del sistema suele ser 0-48dp según el modo del dispositivo
-const TAB_BAR_HEIGHT = 60;
-const BOTTOM_PADDING = Platform.OS === 'android' ? 8 : 20;
 
 export default function TabsLayout() {
   const { esAdmin } = useAuthStore();
+  const insets = useSafeAreaInsets();
+
+  // El inset.bottom da la altura de la barra de navegación del sistema (0-48dp típico)
+  // Usamos clamp para no exceder 60dp (valores anómalos de SafeArea en algunos dispositivos)
+  const safeBottom = Platform.OS === 'android'
+    ? Math.min(Math.max(insets.bottom, 0), 60)
+    : insets.bottom;
 
   return (
     <Tabs
@@ -22,20 +23,18 @@ export default function TabsLayout() {
           backgroundColor: '#ffffff',
           borderTopColor: '#e2e8f0',
           borderTopWidth: 1,
-          height: TAB_BAR_HEIGHT,
-          paddingBottom: BOTTOM_PADDING,
+          // SIN position:absolute — dejamos que React Navigation maneje el layout
+          // La altura se calcula sumando la barra de sistema
+          height: 56 + safeBottom,
+          paddingBottom: safeBottom + 4,
           paddingTop: 6,
           elevation: 8,
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
         },
-        // Cada Stack interno maneja su propio header
+        // Los Stack internos manejan sus propios headers
         headerShown: false,
       }}
     >

@@ -1,12 +1,12 @@
 import { Stack } from 'expo-router';
-import SyncIndicator from '@/components/SyncIndicator';
+import HeaderActions from '@/components/HeaderActions';
 
 const headerComun = {
   headerStyle: { backgroundColor: '#ffffff' },
   headerTitleStyle: { fontWeight: '700' as const, color: '#0f172a', fontSize: 17 },
   headerTintColor: '#1e40af',
-  headerRight: () => <SyncIndicator />,
-  headerRightContainerStyle: { paddingRight: 12 },
+  headerRight: () => <HeaderActions />,
+  headerRightContainerStyle: { paddingRight: 4 },
 };
 
 export default function ObjetosLayout() {
