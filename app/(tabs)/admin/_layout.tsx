@@ -1,6 +1,15 @@
-import { Stack } from 'expo-router';
+import { Stack, Redirect } from 'expo-router';
 import { useAuthStore } from '@/store/useAuthStore';
 import { View, Text, StyleSheet } from 'react-native';
+import HeaderActions from '@/components/HeaderActions';
+
+const headerComun = {
+  headerStyle: { backgroundColor: '#ffffff' },
+  headerTitleStyle: { fontWeight: '700' as const, color: '#0f172a', fontSize: 17 },
+  headerTintColor: '#1e40af',
+  headerRight: () => <HeaderActions />,
+  headerRightContainerStyle: { paddingRight: 4 },
+};
 
 export default function AdminLayout() {
   const { esAdmin } = useAuthStore();
@@ -17,12 +26,16 @@ export default function AdminLayout() {
   return (
     <Stack>
       <Stack.Screen
+        name="index"
+        options={{ ...headerComun, title: 'Administración', headerBackVisible: false }}
+      />
+      <Stack.Screen
         name="columnas"
-        options={{ title: 'Gestión de Columnas' }}
+        options={{ ...headerComun, title: 'Columnas extra' }}
       />
       <Stack.Screen
         name="usuarios"
-        options={{ title: 'Gestión de Usuarios' }}
+        options={{ ...headerComun, title: 'Usuarios' }}
       />
     </Stack>
   );
