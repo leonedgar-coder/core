@@ -50,3 +50,12 @@ yarn-error.*
 
 # Logs
 *.log
+
+
+#propios
+tareas.md
+temp.md
+.gitignore
+.vscode/
+
+
