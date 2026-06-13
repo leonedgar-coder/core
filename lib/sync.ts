@@ -22,6 +22,32 @@ function getStore() {
   return useSyncStore.getState();
 }
 
+/** Error #3 — Valida que un ID sea UUID v4 válido antes de intentar push */
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function esUUIDValido(id: string): boolean {
+  return UUID_REGEX.test(id);
+}
+
+/**
+ * Error #2 — Convierte fecha de cualquier formato local a ISO YYYY-MM-DD
+ * que PostgreSQL/Supabase acepta.
+ * Formatos detectados: DD-MM-YYYY, DD/MM/YYYY, YYYY-MM-DD (ya correcto)
+ */
+function normalizarFecha(fecha?: string | null): string | null {
+  if (!fecha) return null;
+  // Si ya está en formato ISO YYYY-MM-DD, retornar tal cual
+  if (/^\d{4}-\d{2}-\d{2}/.test(fecha)) return fecha.substring(0, 10);
+  // Detectar DD-MM-YYYY o DD/MM/YYYY
+  const match = fecha.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  if (match) {
+    const [, dia, mes, anio] = match;
+    return `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+  }
+  // Si no se puede parsear, retornar null para evitar error de BD
+  console.warn(`Fecha con formato desconocido ignorada: ${fecha}`);
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // 9.1 — Subida de fotos a Supabase Storage
 // ---------------------------------------------------------------------------
@@ -136,32 +162,42 @@ async function pushPersonas(userId: string): Promise<number> {
   let subidos = 0;
 
   for (const persona of pendientes) {
+    // Error #3: saltar registros con ID no-UUID (datos legacy)
+    if (!esUUIDValido(persona.id)) {
+      console.warn(`Saltando persona con ID inválido: ${persona.id}`);
+      continue;
+    }
+
     try {
-      // Si tiene foto local pero no foto_url → subir primero
+      // Error #1: intentar subir foto; si falla, continuar sin foto_url
       let fotoUrl = persona.foto_url;
       if (persona.foto_local && !persona.foto_url) {
         try {
-          fotoUrl = await subirFoto('personas', persona.id, userId, persona.foto_local);
-          dbPersonas.actualizar(persona.id, { foto_url: fotoUrl });
+          // Verificar que el archivo existe antes de intentar subir
+          const info = await FileSystem.getInfoAsync(persona.foto_local);
+          if (info.exists) {
+            fotoUrl = await subirFoto('personas', persona.id, userId, persona.foto_local);
+            dbPersonas.actualizar(persona.id, { foto_url: fotoUrl });
+          } else {
+            console.warn(`Foto local no existe, se omite: ${persona.foto_local}`);
+          }
         } catch {
-          // No bloquear la sync por un error de foto
           console.warn(`No se pudo subir foto de persona ${persona.id}`);
         }
       }
 
       if (persona.pendiente_eliminar) {
-        // Soft delete en Supabase
         await supabase
           .from('personas')
           .update({ eliminado: true, actualizado_en: new Date().toISOString() })
           .eq('id', persona.id);
       } else {
-        // Upsert en Supabase
+        // Error #2: normalizar fecha antes del upsert
         const { error } = await supabase.from('personas').upsert({
           id: persona.id,
           nombre: persona.nombre,
           numero_elemento: persona.numero_elemento ?? null,
-          fecha_registro: persona.fecha_registro ?? null,
+          fecha_registro: normalizarFecha(persona.fecha_registro),
           foto_url: fotoUrl ?? null,
           datos_extra: persona.datos_extra,
           creado_por: userId,
@@ -172,7 +208,6 @@ async function pushPersonas(userId: string): Promise<number> {
         if (error) throw error;
       }
 
-      // Marcar como sincronizado en SQLite
       dbPersonas.upsertDesdeSync({ ...persona, foto_url: fotoUrl, sincronizado: 1, pendiente_eliminar: false } as unknown as Persona);
       subidos++;
     } catch (e) {
@@ -230,12 +265,24 @@ async function pushObjetos(userId: string): Promise<number> {
   let subidos = 0;
 
   for (const objeto of pendientes) {
+    // Error #3: saltar registros con ID no-UUID (datos legacy)
+    if (!esUUIDValido(objeto.id)) {
+      console.warn(`Saltando objeto con ID inválido: ${objeto.id}`);
+      continue;
+    }
+
     try {
+      // Error #1: verificar existencia del archivo antes de subir
       let fotoUrl = objeto.foto_url;
       if (objeto.foto_local && !objeto.foto_url) {
         try {
-          fotoUrl = await subirFoto('objetos', objeto.id, userId, objeto.foto_local);
-          dbObjetos.actualizar(objeto.id, { foto_url: fotoUrl });
+          const info = await FileSystem.getInfoAsync(objeto.foto_local);
+          if (info.exists) {
+            fotoUrl = await subirFoto('objetos', objeto.id, userId, objeto.foto_local);
+            dbObjetos.actualizar(objeto.id, { foto_url: fotoUrl });
+          } else {
+            console.warn(`Foto local no existe, se omite: ${objeto.foto_local}`);
+          }
         } catch {
           console.warn(`No se pudo subir foto de objeto ${objeto.id}`);
         }
