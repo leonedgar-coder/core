@@ -20,10 +20,10 @@ export default function FotoPicker({ uri, onSelect, disabled }: FotoPickerProps)
     if (status !== 'granted') return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'] as ImagePicker.MediaType[],
       allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8, // compresión nativa (0=máx compresión, 1=sin compresión)
+      aspect: [1, 1] as [number, number],
+      quality: 0.8,
     });
 
     if (result.canceled || !result.assets[0]) return;
