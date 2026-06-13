@@ -9,10 +9,17 @@ export default function TabsLayout() {
   const { esAdmin } = useAuthStore();
   const insets = useSafeAreaInsets();
 
-  // En Android con translucent=false, el top ya está manejado por el StatusBar.
-  // Para el bottom usamos el inset real; si es 0 (dispositivo sin barra virtual),
-  // agregamos 8dp de padding mínimo.
   const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 0);
+
+  // Opciones del header compartido para pantallas index de cada tab
+  const headerIndex = {
+    headerStyle: { backgroundColor: '#ffffff' },
+    headerTitleStyle: { fontWeight: '700' as const, color: '#0f172a', fontSize: 17 },
+    // SyncIndicator en el header de los índices de tab
+    headerRight: () => <SyncIndicator />,
+    headerRightContainerStyle: { paddingRight: 12 },
+    headerShadowVisible: false,
+  };
 
   return (
     <Tabs
@@ -32,19 +39,8 @@ export default function TabsLayout() {
           fontSize: 11,
           fontWeight: '600',
         },
-        headerStyle: {
-          backgroundColor: '#ffffff',
-          elevation: 2,
-          shadowOpacity: 0.06,
-        },
-        headerTitleStyle: {
-          fontWeight: '700',
-          color: '#0f172a',
-          fontSize: 17,
-        },
-        // NO poner headerStatusBarHeight — lo maneja translucent=false
-        headerRight: () => <SyncIndicator />,
-        headerRightContainerStyle: { paddingRight: 12 },
+        // SIN headerRight global — cada tab lo declara por separado
+        headerShown: false, // Los Stack de cada tab manejan sus propios headers
       }}
     >
       <Tabs.Screen
@@ -54,8 +50,10 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people" size={size} color={color} />
           ),
+          // El header del tab se configura en personas/_layout.tsx
         }}
       />
+
       <Tabs.Screen
         name="objetos"
         options={{
@@ -65,6 +63,7 @@ export default function TabsLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name="admin"
         options={{
