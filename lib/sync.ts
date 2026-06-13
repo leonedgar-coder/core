@@ -164,7 +164,7 @@ async function pushPersonas(userId: string): Promise<number> {
   for (const persona of pendientes) {
     // Error #3: saltar registros con ID no-UUID (datos legacy)
     if (!esUUIDValido(persona.id)) {
-      console.warn(`Saltando persona con ID inválido: ${persona.id}`);
+      console.log(`[sync] Saltando persona con ID no-UUID: ${persona.id}`);
       continue;
     }
 
@@ -267,7 +267,7 @@ async function pushObjetos(userId: string): Promise<number> {
   for (const objeto of pendientes) {
     // Error #3: saltar registros con ID no-UUID (datos legacy)
     if (!esUUIDValido(objeto.id)) {
-      console.warn(`Saltando objeto con ID inválido: ${objeto.id}`);
+      console.log(`[sync] Saltando objeto con ID no-UUID: ${objeto.id}`);
       continue;
     }
 

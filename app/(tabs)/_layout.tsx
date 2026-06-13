@@ -1,25 +1,17 @@
-import { Platform } from 'react-native';
+import { Platform, StatusBar as RNStatusBar } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/store/useAuthStore';
 import SyncIndicator from '@/components/SyncIndicator';
 
+// Altura fija y segura para la tab bar en Android
+// StatusBar.currentHeight da la altura de la barra de estado (que ya no es translucent)
+// La barra de navegación del sistema suele ser 0-48dp según el modo del dispositivo
+const TAB_BAR_HEIGHT = 60;
+const BOTTOM_PADDING = Platform.OS === 'android' ? 8 : 20;
+
 export default function TabsLayout() {
   const { esAdmin } = useAuthStore();
-  const insets = useSafeAreaInsets();
-
-  const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 0);
-
-  // Opciones del header compartido para pantallas index de cada tab
-  const headerIndex = {
-    headerStyle: { backgroundColor: '#ffffff' },
-    headerTitleStyle: { fontWeight: '700' as const, color: '#0f172a', fontSize: 17 },
-    // SyncIndicator en el header de los índices de tab
-    headerRight: () => <SyncIndicator />,
-    headerRightContainerStyle: { paddingRight: 12 },
-    headerShadowVisible: false,
-  };
 
   return (
     <Tabs
@@ -30,17 +22,21 @@ export default function TabsLayout() {
           backgroundColor: '#ffffff',
           borderTopColor: '#e2e8f0',
           borderTopWidth: 1,
-          height: 56 + bottomPadding,
-          paddingBottom: bottomPadding + 4,
+          height: TAB_BAR_HEIGHT,
+          paddingBottom: BOTTOM_PADDING,
           paddingTop: 6,
           elevation: 8,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
         },
-        // SIN headerRight global — cada tab lo declara por separado
-        headerShown: false, // Los Stack de cada tab manejan sus propios headers
+        // Cada Stack interno maneja su propio header
+        headerShown: false,
       }}
     >
       <Tabs.Screen
@@ -50,7 +46,6 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people" size={size} color={color} />
           ),
-          // El header del tab se configura en personas/_layout.tsx
         }}
       />
 

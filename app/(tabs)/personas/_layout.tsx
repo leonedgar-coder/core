@@ -1,6 +1,9 @@
 import { Stack } from 'expo-router';
 import SyncIndicator from '@/components/SyncIndicator';
 
+// Padding para que el contenido no quede oculto bajo la tab bar fija
+const CONTENT_BOTTOM = 60;
+
 const headerComun = {
   headerStyle: { backgroundColor: '#ffffff' },
   headerTitleStyle: { fontWeight: '700' as const, color: '#0f172a', fontSize: 17 },
