@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/store/useAuthStore';
 
 export default function RootLayout() {
@@ -8,12 +9,10 @@ export default function RootLayout() {
   const segments = useSegments();
   const { usuario, sesionCargando, verificarSesion } = useAuthStore();
 
-  // Verificar sesión al montar la app (una sola vez)
   useEffect(() => {
     verificarSesion();
   }, []);
 
-  // Guard de autenticación
   useEffect(() => {
     if (sesionCargando) return;
 
@@ -26,20 +25,23 @@ export default function RootLayout() {
     }
   }, [usuario, sesionCargando, segments]);
 
-  // Splash mientras verifica sesión
   if (sesionCargando) {
     return (
-      <View style={styles.splash}>
-        <ActivityIndicator size="large" color="#1e40af" />
-      </View>
+      <SafeAreaProvider>
+        <View style={styles.splash}>
+          <ActivityIndicator size="large" color="#1e40af" />
+        </View>
+      </SafeAreaProvider>
     );
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <SafeAreaProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </SafeAreaProvider>
   );
 }
 

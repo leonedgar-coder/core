@@ -1,10 +1,12 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/store/useAuthStore';
 import SyncIndicator from '@/components/SyncIndicator';
 
 export default function TabsLayout() {
   const { esAdmin } = useAuthStore();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -15,8 +17,10 @@ export default function TabsLayout() {
           backgroundColor: '#ffffff',
           borderTopColor: '#e2e8f0',
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
+          // Altura base + padding inferior del safe area (barra navegación Android)
+          height: 56 + insets.bottom,
+          paddingBottom: insets.bottom + 6,
+          paddingTop: 6,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -33,11 +37,12 @@ export default function TabsLayout() {
           color: '#0f172a',
           fontSize: 17,
         },
+        // Padding superior para la barra de estado
+        headerStatusBarHeight: insets.top,
         headerRight: () => <SyncIndicator />,
         headerRightContainerStyle: { paddingRight: 12 },
       }}
     >
-      {/* Tab Personas */}
       <Tabs.Screen
         name="personas"
         options={{
@@ -48,7 +53,6 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* Tab Objetos */}
       <Tabs.Screen
         name="objetos"
         options={{
@@ -59,7 +63,6 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* Tab Admin — solo visible para admins */}
       <Tabs.Screen
         name="admin"
         options={{
@@ -67,7 +70,6 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings" size={size} color={color} />
           ),
-          // Ocultar la tab si no es admin
           href: esAdmin ? undefined : null,
         }}
       />
