@@ -13,17 +13,15 @@ export default function RootLayout() {
     verificarSesion();
   }, []);
 
-  // Guard de autenticación: redirigir según estado
+  // Guard de autenticación
   useEffect(() => {
-    if (sesionCargando) return; // Esperar a que termine la verificación
+    if (sesionCargando) return;
 
     const enAuth = segments[0] === '(auth)';
 
     if (!usuario && !enAuth) {
-      // No autenticado fuera de auth → ir a login
       router.replace('/(auth)/login');
     } else if (usuario && enAuth) {
-      // Autenticado dentro de auth → ir a tabs
       router.replace('/(tabs)/personas');
     }
   }, [usuario, sesionCargando, segments]);
@@ -38,9 +36,9 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack>
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(tabs)" />
     </Stack>
   );
 }
