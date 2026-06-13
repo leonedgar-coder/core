@@ -25,7 +25,8 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.ACCESS_NETWORK_STATE",
-        "android.permission.INTERNET"
+        "android.permission.INTERNET",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -49,9 +50,11 @@
       "typedRoutes": true
     },
     "extra": {
+      "router": {},
       "eas": {
-        "projectId": "bd-colaborativa"
+        "projectId": "937d0200-3e2f-4642-bdb2-51cd0f990595"
       }
-    }
+    },
+    "owner": "core_edgar"
   }
 }
