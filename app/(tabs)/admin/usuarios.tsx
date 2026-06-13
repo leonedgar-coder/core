@@ -2,7 +2,7 @@
  * app/(tabs)/admin/usuarios.tsx — Gestión de usuarios (Fase 10.2)
  * Lista, invita, cambia rol y desactiva usuarios via Edge Function
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   TextInput, Alert, ActivityIndicator, Modal, RefreshControl,
@@ -88,10 +88,11 @@ export default function UsuariosScreen() {
     }
   }, []);
 
-  // Cargar al montar (solo una vez)
-  if (!cargadoPrimero && !cargando) {
+  // ✅ Cargar al montar en useEffect — nunca llamar setState en el cuerpo del render
+  useEffect(() => {
     cargar();
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ---------------------------------------------------------------------------
   // Invitar usuario
