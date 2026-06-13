@@ -1,6 +1,5 @@
 import { View, Image, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import * as ImageManipulator from 'expo-image-manipulator';
 
 interface FotoPickerProps {
   uri?: string;
@@ -18,27 +17,18 @@ export default function FotoPicker({ uri, onSelect, disabled }: FotoPickerProps)
     if (disabled) return;
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      return;
-    }
+    if (status !== 'granted') return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1, // comprimimos nosotros con manipulator
+      quality: 0.8, // compresión nativa (0=máx compresión, 1=sin compresión)
     });
 
     if (result.canceled || !result.assets[0]) return;
 
-    // Comprimir: resize a 800px + calidad 80%
-    const comprimida = await ImageManipulator.manipulateAsync(
-      result.assets[0].uri,
-      [{ resize: { width: 800 } }],
-      { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
-    );
-
-    onSelect(comprimida.uri);
+    onSelect(result.assets[0].uri);
   };
 
   return (
