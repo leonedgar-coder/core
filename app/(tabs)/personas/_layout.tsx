@@ -1,13 +1,22 @@
+import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import HeaderActions from '@/components/HeaderActions';
+import BtnExportar from '@/components/BtnExportar';
+
+// Fila derecha del header: exportar + nube
+const PersonasHeaderRight = () => (
+  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, paddingRight: 4 }}>
+    <BtnExportar tabla="personas" />
+    <HeaderActions />
+  </View>
+);
 
 const headerComun = {
   headerStyle: { backgroundColor: '#ffffff' },
   headerTitleStyle: { fontWeight: '700' as const, color: '#0f172a', fontSize: 17 },
   headerTintColor: '#1e40af',
-  // Nube + Engrane juntos, sin solapamiento
-  headerRight: () => <HeaderActions />,
-  headerRightContainerStyle: { paddingRight: 4 },
+  headerRight: PersonasHeaderRight,
+  headerRightContainerStyle: { paddingRight: 0 },
 };
 
 export default function PersonasLayout() {
