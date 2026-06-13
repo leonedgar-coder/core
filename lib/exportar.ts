@@ -166,17 +166,27 @@ export async function exportarPDF(tabla: TablaDB): Promise<void> {
 </body>
 </html>`;
 
-  const { uri: pdfUri } = await Print.printToFileAsync({
+  // base64:true devuelve el contenido del PDF como string en lugar de un archivo en cache
+  // Esto evita todos los problemas de permisos de sandbox en Android (Expo Go)
+  const result = await Print.printToFileAsync({
     html,
     width: 612,
     height: 792,
+    base64: true,
   });
 
-  // copyAsync funciona entre particiones (a diferencia de moveAsync)
-  // documentDirectory es accesible por ExpoSharing; el cache de Print NO lo es en Android
   const nombre = `${tabla}_${timestamp()}.pdf`;
   const destino = `${FileSystem.documentDirectory}${nombre}`;
-  await FileSystem.copyAsync({ from: pdfUri, to: destino });
+
+  if (result.base64) {
+    // Escribir directamente al documentDirectory con base64 — siempre accesible
+    await FileSystem.writeAsStringAsync(destino, result.base64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+  } else {
+    // Fallback: intentar copiar desde el cache (puede fallar en Expo Go)
+    await FileSystem.copyAsync({ from: result.uri, to: destino });
+  }
 
   await Sharing.shareAsync(destino, {
     mimeType: 'application/pdf',
