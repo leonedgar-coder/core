@@ -172,9 +172,13 @@ export async function exportarPDF(tabla: TablaDB): Promise<void> {
     height: 792,
   });
 
-  // Compartir directamente desde el URI generado por expo-print
-  // (FileSystem.moveAsync falla en Android al cruzar particiones cache → documentDirectory)
-  await Sharing.shareAsync(pdfUri, {
+  // copyAsync funciona entre particiones (a diferencia de moveAsync)
+  // documentDirectory es accesible por ExpoSharing; el cache de Print NO lo es en Android
+  const nombre = `${tabla}_${timestamp()}.pdf`;
+  const destino = `${FileSystem.documentDirectory}${nombre}`;
+  await FileSystem.copyAsync({ from: pdfUri, to: destino });
+
+  await Sharing.shareAsync(destino, {
     mimeType: 'application/pdf',
     dialogTitle: `Exportar ${titulo} — PDF`,
     UTI: 'com.adobe.pdf',
